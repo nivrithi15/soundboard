@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Color Breaks — Color Vision Deficiency Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121210;
+    --panel:#1B1B17;
+    --panel-2:#211F1A;
+    --line:#3B3A31;
+    --line-soft:#26251F;
+    --text:#EDEAE0;
+    --text-muted:#96927F;
+    --text-faint:#5E5B4E;
+    --protan:#B5563E;
+    --deutan:#8A8C3E;
+    --tritan:#3E7A8C;
+    --achroma:#9A9A93;
+    --normal:#C9A227;
+    --paper:#F4F1E6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{background:var(--normal);color:#161600;}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:48px 28px 80px;}
+
+  /* ---------- Header ---------- */
+  header{margin-bottom:44px;border-bottom:1px solid var(--line-soft);padding-bottom:36px;}
+  .eyebrow{
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-muted);
+    display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  }
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--normal);box-shadow:0 0 0 3px rgba(201,162,39,.15);}
+  h1{
+    font-family:'Instrument Serif',serif;
+    font-weight:400;
+    font-size:clamp(40px,6vw,68px);
+    line-height:1.02;
+    margin:0 0 16px;
+    letter-spacing:-.01em;
+  }
+  h1 em{color:var(--text-muted);font-style:italic;}
+  .sub{max-width:560px;color:var(--text-muted);font-size:13.5px;line-height:1.7;}
+  .sub b{color:var(--text);font-weight:600;}
+
+  /* ---------- Dropzone ---------- */
+  .dropzone{
+    position:relative;
+    border:1px dashed var(--line);
+    background:var(--panel);
+    padding:56px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .2s, background .2s;
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--normal);background:var(--panel-2);}
+  .dropzone .corner{position:absolute;width:14px;height:14px;border-color:var(--text-faint);}
+  .dropzone .corner.tl{top:8px;left:8px;border-top:1px solid;border-left:1px solid;}
+  .dropzone .corner.tr{top:8px;right:8px;border-top:1px solid;border-right:1px solid;}
+  .dropzone .corner.bl{bottom:8px;left:8px;border-bottom:1px solid;border-left:1px solid;}
+  .dropzone .corner.br{bottom:8px;right:8px;border-bottom:1px solid;border-right:1px solid;}
+  .dropzone .dz-icon{font-family:'Instrument Serif',serif;font-size:38px;color:var(--text-muted);margin-bottom:10px;font-style:italic;}
+  .dropzone .dz-title{font-size:14px;color:var(--text);margin-bottom:6px;}
+  .dropzone .dz-hint{font-size:11px;color:var(--text-faint);letter-spacing:.04em;}
+  #fileInput{display:none;}
+
+  /* ---------- App (post-upload) ---------- */
+  #app{display:none;}
+  #app.active{display:block;}
+
+  .toprow{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:40px 0 18px;flex-wrap:wrap;}
+  .toprow .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);}
+  .btn{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    background:transparent;border:1px solid var(--line);color:var(--text-muted);
+    padding:9px 14px;cursor:pointer;transition:.15s;
+  }
+  .btn:hover{border-color:var(--text);color:var(--text);}
+  .btn.primary{border-color:var(--normal);color:var(--normal);}
+  .btn.primary:hover{background:var(--normal);color:#161600;}
+
+  /* ---------- Mode tabs ---------- */
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
+  .tab{
+    display:flex;align-items:center;gap:9px;
+    border:1px solid var(--line);background:var(--panel);
+    padding:9px 13px;cursor:pointer;transition:.15s;
+    font-size:11.5px;letter-spacing:.03em;color:var(--text-muted);
+  }
+  .tab .swatchpair{display:flex;width:16px;height:16px;border-radius:50%;overflow:hidden;border:1px solid rgba(255,255,255,.15);flex-shrink:0;}
+  .tab .swatchpair span{flex:1;}
+  .tab:hover{border-color:var(--text-muted);color:var(--text);}
+  .tab.active{border-color:var(--tab-color,var(--normal));color:var(--text);background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--tab-color,var(--normal));}
+
+  /* ---------- Viewer ---------- */
+  .viewer-shell{border:1px solid var(--line-soft);background:var(--panel);padding:20px;}
+  .viewer{
+    position:relative;width:100%;overflow:hidden;background:#000;
+    user-select:none;
+    touch-action:none;
+  }
+  .viewer canvas{display:block;width:100%;height:100%;}
+  .layer{position:absolute;top:0;left:0;width:100%;height:100%;}
+  .layer.after{clip-path:inset(0 0 0 50%);}
+  .tag{
+    position:absolute;top:12px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    padding:5px 9px;background:rgba(18,18,16,.72);color:var(--paper);border:1px solid rgba(237,234,224,.2);
+    pointer-events:none;
+  }
+  .tag.left{left:12px;}
+  .tag.right{right:12px;}
+  .handle{
+    position:absolute;top:0;bottom:0;left:50%;width:0;
+    cursor:ew-resize;
+  }
+  .handle::before{content:"";position:absolute;top:0;bottom:0;left:-0.5px;width:1px;background:var(--paper);opacity:.85;}
+  .handle .knob{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:38px;height:38px;border-radius:50%;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;gap:4px;
+    box-shadow:0 2px 10px rgba(0,0,0,.5);
+  }
+  .handle .knob::before,.handle .knob::after{content:"";width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;}
+  .handle .knob::before{border-right:6px solid #161600;}
+  .handle .knob::after{border-left:6px solid #161600;}
+
+  .caption{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-top:18px;padding-top:18px;border-top:1px solid var(--line-soft);flex-wrap:wrap;}
+  .caption .mode-name{font-family:'Instrument Serif',serif;font-size:26px;color:var(--mode-color,var(--text));margin:0 0 6px;}
+  .caption .mode-desc{font-size:12.5px;color:var(--text-muted);line-height:1.7;max-width:520px;}
+  .caption .stat{text-align:right;flex-shrink:0;}
+  .caption .stat .num{font-family:'Instrument Serif',serif;font-size:30px;color:var(--mode-color,var(--text));line-height:1;}
+  .caption .stat .lbl{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-top:4px;}
+
+  /* ---------- Small multiples grid ---------- */
+  .grid-head{display:flex;align-items:baseline;gap:10px;margin:52px 0 16px;}
+  .grid-head .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);}
+  .grid-head .rule{flex:1;height:1px;background:var(--line-soft);}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr);}}
+  .cell{border:1px solid var(--line-soft);background:var(--panel);cursor:pointer;transition:border-color .15s;}
+  .cell:hover{border-color:var(--text-muted);}
+  .cell.active{border-color:var(--cell-color,var(--normal));}
+  .cell img,.cell canvas{width:100%;display:block;aspect-ratio:4/3;object-fit:cover;}
+  .cell .cell-lbl{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);}
+  .cell.active .cell-lbl{color:var(--text);}
+  .cell .dot{width:7px;height:7px;border-radius:50%;background:var(--cell-color,var(--normal));}
+
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line-soft);font-size:10.5px;color:var(--text-faint);line-height:1.8;}
+
+  .hidden-canvas{display:none;}
+
+  .loading{display:none;align-items:center;gap:10px;font-size:11px;color:var(--text-muted);letter-spacing:.05em;margin-top:14px;}
+  .loading.active{display:flex;}
+  .loading .spin{width:10px;height:10px;border-radius:50%;border:1px solid var(--line);border-top-color:var(--normal);animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Ophthalmic Color Lab · 8 deficiency types</div>
+    <h1>How Color <em>Breaks</em></h1>
+    <p class="sub">Upload a photograph and view it through the eyes of <b>protanopia</b>, <b>deuteranopia</b>, <b>tritanopia</b>, <b>achromatopsia</b>, and their milder anomalous forms. Drag the divider to compare against ordinary color vision.</p>
+  </header>
+
+  <div class="dropzone" id="dropzone">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <div class="dz-icon">◐</div>
+    <div class="dz-title">Drop an image here, or click to browse</div>
+    <div class="dz-hint">JPG · PNG · WEBP — processed locally in your browser, never uploaded</div>
+    <input type="file" id="fileInput" accept="image/*">
+  </div>
+  <div class="loading" id="loading"><span class="spin"></span> Rendering eight simulations…</div>
+
+  <div id="app">
+
+    <div class="toprow">
+      <div class="label">Mode</div>
+      <button class="btn" id="newImageBtn">Load a different image</button>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="viewer-shell">
+      <div class="viewer" id="viewer">
+        <canvas class="layer before" id="canvasBefore"></canvas>
+        <canvas class="layer after" id="canvasAfter"></canvas>
+        <span class="tag left">Ordinary vision</span>
+        <span class="tag right" id="tagRight">Simulated</span>
+        <div class="handle" id="handle"><div class="knob"></div></div>
+      </div>
+      <div class="caption">
+        <div>
+          <p class="mode-name" id="modeName">Normal vision</p>
+          <p class="mode-desc" id="modeDesc">This is your baseline image, unaltered.</p>
+        </div>
+        <div class="stat">
+          <div class="num" id="modeStat">—</div>
+          <div class="lbl">approx. prevalence</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-head"><span class="label">All types, side by side</span><span class="rule"></span></div>
+    <div class="grid" id="grid"></div>
+
+    <footer>
+      Simulations use published cone-response transform matrices (Machado / Viénot–Brettel style dichromat approximations) applied per pixel in sRGB space; anomalous-trichromacy modes are linear blends toward the corresponding dichromat matrix. This is an educational approximation, not a clinically validated diagnostic tool — lived experience of color vision deficiency varies by individual and lighting condition.
+    </footer>
+  </div>
+
+</div>
+
+<canvas class="hidden-canvas" id="workCanvas"></canvas>
+
+<script>
+(function(){
+  const IDENT = [[1,0,0],[0,1,0],[0,0,1]];
+  const PROTANOPIA = [[0.567,0.433,0.000],[0.558,0.442,0.000],[0.000,0.242,0.758]];
+  const DEUTERANOPIA = [[0.625,0.375,0.000],[0.700,0.300,0.000],[0.000,0.300,0.700]];
+  const TRITANOPIA = [[0.950,0.050,0.000],[0.000,0.433,0.567],[0.000,0.475,0.525]];
+  const GRAY = [[0.299,0.587,0.114],[0.299,0.587,0.114],[0.299,0.587,0.114]];
+
+  function lerpMatrix(a,b,t){
+    const out=[[0,0,0],[0,0,0],[0,0,0]];
+    for(let i=0;i<3;i++) for(let j=0;j<3;j++) out[i][j]=a[i][j]+(b[i][j]-a[i][j])*t;
+    return out;
+  }
+
+  const MODES = [
+    {key:'normal', label:'Normal vision', color:'var(--normal)', colorHex:'#C9A227', matrix:IDENT, stat:'baseline',
+     desc:'This is your baseline image, unaltered — full trichromatic color vision.'},
+    {key:'protan', label:'Protanopia', color:'var(--protan)', colorHex:'#B5563E', matrix:PROTANOPIA, stat:'~1% of men',
+     desc:'Red-sensing cones are absent. Reds appear darker and muddier, and reds/greens along one confusion axis become hard to tell apart.'},
+    {key:'protanomaly', label:'Protanomaly', color:'var(--protan)', colorHex:'#B5563E', matrix:lerpMatrix(IDENT,PROTANOPIA,0.6), stat:'~1% of men',
+     desc:'A milder, shifted version of red sensitivity rather than a total absence — reds look weaker but are not fully lost.'},
+    {key:'deutan', label:'Deuteranopia', color:'var(--deutan)', colorHex:'#8A8C3E', matrix:DEUTERANOPIA, stat:'~1% of men',
+     desc:'Green-sensing cones are absent. This is the classic "red-green colorblind" experience — greens and reds collapse toward a shared tan/olive.'},
+    {key:'deuteranomaly', label:'Deuteranomaly', color:'var(--deutan)', colorHex:'#8A8C3E', matrix:lerpMatrix(IDENT,DEUTERANOPIA,0.6), stat:'~5% of men',
+     desc:'The most common color vision deficiency overall — green sensitivity is shifted rather than absent, muting reds and greens.'},
+    {key:'tritan', label:'Tritanopia', color:'var(--tritan)', colorHex:'#3E7A8C', matrix:TRITANOPIA, stat:'&lt;0.01% of people',
+     desc:'Blue-sensing cones are absent. Blues and greens become difficult to separate, and yellows can look pink or pale gray.'},
+    {key:'tritanomaly', label:'Tritanomaly', color:'var(--tritan)', colorHex:'#3E7A8C', matrix:lerpMatrix(IDENT,TRITANOPIA,0.6), stat:'very rare',
+     desc:'A milder shift in blue sensitivity — the blue/yellow confusion of tritanopia, but less pronounced.'},
+    {key:'achroma', label:'Achromatopsia', color:'var(--achroma)', colorHex:'#9A9A93', matrix:GRAY, stat:'~1 in 30,000',
+     desc:'Complete color blindness. All three cone types are non-functional or absent, so vision relies entirely on brightness — the world renders in grayscale.'},
+    {key:'achromatomaly', label:'Achromatomaly', color:'var(--achroma)', colorHex:'#9A9A93', matrix:lerpMatrix(IDENT,GRAY,0.6), stat:'extremely rare',
+     desc:'Partial cone function remains, so some desaturated color is perceivable rather than pure grayscale.'},
+  ];
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const app = document.getElementById('app');
+  const loading = document.getElementById('loading');
+  const workCanvas = document.getElementById('workCanvas');
+  const canvasBefore = document.getElementById('canvasBefore');
+  const canvasAfter = document.getElementById('canvasAfter');
+  const viewer = document.getElementById('viewer');
+  const handle = document.getElementById('handle');
+  const afterLayer = document.querySelector('.layer.after');
+  const tabsEl = document.getElementById('tabs');
+  const gridEl = document.getElementById('grid');
+  const modeName = document.getElementById('modeName');
+  const modeDesc = document.getElementById('modeDesc');
+  const modeStat = document.getElementById('modeStat');
+  const tagRight = document.getElementById('tagRight');
+  const newImageBtn = document.getElementById('newImageBtn');
+
+  let modeCanvases = {};
+  let currentMode = 'protan';
+
+  function clamp(v){return v<0?0:v>255?255:v;}
+
+  function renderMode(matrix, srcCanvas){
+    const w = srcCanvas.width, h = srcCanvas.height;
+    const sctx = srcCanvas.getContext('2d');
+    const imgData = sctx.getImageData(0,0,w,h);
+    const data = imgData.data;
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    const octx = out.getContext('2d');
+    const od = octx.createImageData(w,h);
+    const odata = od.data;
+    const m = matrix;
+    for(let i=0;i<data.length;i+=4){
+      const r=data[i], g=data[i+1], b=data[i+2];
+      odata[i]   = clamp(m[0][0]*r + m[0][1]*g + m[0][2]*b);
+      odata[i+1] = clamp(m[1][0]*r + m[1][1]*g + m[1][2]*b);
+      odata[i+2] = clamp(m[2][0]*r + m[2][1]*g + m[2][2]*b);
+      odata[i+3] = data[i+3];
+    }
+    octx.putImageData(od,0,0);
+    return out;
+  }
+
+  function buildTabs(){
+    tabsEl.innerHTML = '';
+    MODES.forEach(m=>{
+      const tab = document.createElement('div');
+      tab.className = 'tab';
+      tab.style.setProperty('--tab-color', m.colorHex);
+      tab.dataset.key = m.key;
+      const pair = document.createElement('div');
+      pair.className = 'swatchpair';
+      pair.innerHTML = confusionSwatchHTML(m.key);
+      tab.appendChild(pair);
+      const lbl = document.createElement('span');
+      lbl.textContent = m.label;
+      tab.appendChild(lbl);
+      tab.addEventListener('click', ()=>selectMode(m.key));
+      tabsEl.appendChild(tab);
+    });
+  }
+
+  // representative confusion-pair colors per deficiency type, for the tab icon
+  function confusionSwatchHTML(key){
+    const pairs = {
+      normal: ['#B5563E','#8A8C3E'],
+      protan: ['#B5563E','#8A8C3E'],
+      protanomaly: ['#B5563E','#8A8C3E'],
+      deutan: ['#8A8C3E','#B5563E'],
+      deuteranomaly: ['#8A8C3E','#B5563E'],
+      tritan: ['#3E7A8C','#C9A227'],
+      tritanomaly: ['#3E7A8C','#C9A227'],
+      achroma: ['#4A4A46','#C7C4B8'],
+      achromatomaly: ['#4A4A46','#C7C4B8'],
+    };
+    const [a,b] = pairs[key] || ['#999','#666'];
+    return `<span style="background:${a}"></span><span style="background:${b}"></span>`;
+  }
+
+  function buildGrid(){
+    gridEl.innerHTML = '';
+    MODES.forEach(m=>{
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.setProperty('--cell-color', m.colorHex);
+      cell.dataset.key = m.key;
+      const imgHolder = document.createElement('div');
+      const c = document.createElement('canvas');
+      c.dataset.role = 'thumb-'+m.key;
+      cell.appendChild(c);
+      const lbl = document.createElement('div');
+      lbl.className = 'cell-lbl';
+      lbl.innerHTML = `<span>${m.label}</span><span class="dot"></span>`;
+      cell.appendChild(lbl);
+      cell.addEventListener('click', ()=>selectMode(m.key));
+      gridEl.appendChild(cell);
+    });
+  }
+
+  function selectMode(key){
+    currentMode = key;
+    const m = MODES.find(x=>x.key===key);
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.key===key));
+    document.querySelectorAll('.cell').forEach(c=>c.classList.toggle('active', c.dataset.key===key));
+
+    const src = modeCanvases[key];
+    canvasAfter.width = src.width; canvasAfter.height = src.height;
+    canvasAfter.getContext('2d').drawImage(src,0,0);
+
+    modeName.textContent = m.label;
+    modeName.style.setProperty('--mode-color', m.colorHex);
+    modeDesc.textContent = m.desc.replace('&lt;','<');
+    modeStat.textContent = m.stat.replace('&lt;','<');
+    modeStat.style.setProperty('--mode-color', m.colorHex);
+    tagRight.textContent = key==='normal' ? 'Ordinary vision' : m.label;
+  }
+
+  function setSlider(pct){
+    pct = Math.max(2, Math.min(98, pct));
+    afterLayer.style.clipPath = `inset(0 0 0 ${pct}%)`;
+    handle.style.left = pct + '%';
+  }
+
+  function bindSlider(){
+    let dragging = false;
+    function pctFromEvent(e){
+      const rect = viewer.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      return (x / rect.width) * 100;
+    }
+    handle.addEventListener('pointerdown', e=>{ dragging=true; e.preventDefault(); });
+    viewer.addEventListener('pointerdown', e=>{ dragging=true; setSlider(pctFromEvent(e)); });
+    window.addEventListener('pointermove', e=>{ if(dragging) setSlider(pctFromEvent(e)); });
+    window.addEventListener('pointerup', ()=>{ dragging=false; });
+  }
+
+  function handleFile(file){
+    if(!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=> processImage(img);
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function processImage(img){
+    loading.classList.add('active');
+    app.classList.remove('active');
+    setTimeout(()=>{
+      const maxDim = 900;
+      let w = img.width, h = img.height;
+      const scale = Math.min(1, maxDim / Math.max(w,h));
+      w = Math.round(w*scale); h = Math.round(h*scale);
+
+      workCanvas.width = w; workCanvas.height = h;
+      const wctx = workCanvas.getContext('2d');
+      wctx.drawImage(img,0,0,w,h);
+
+      canvasBefore.width = w; canvasBefore.height = h;
+      canvasBefore.getContext('2d').drawImage(workCanvas,0,0);
+      viewer.style.aspectRatio = w + ' / ' + h;
+
+      modeCanvases = {};
+      MODES.forEach(m=>{
+        modeCanvases[m.key] = renderMode(m.matrix, workCanvas);
+      });
+
+      // thumbnails
+      MODES.forEach(m=>{
+        const thumb = document.querySelector(`canvas[data-role="thumb-${m.key}"]`);
+        const tw = 320, th = Math.round(tw * (h/w));
+        thumb.width = tw; thumb.height = th;
+        thumb.getContext('2d').drawImage(modeCanvases[m.key],0,0,tw,th);
+      });
+
+      loading.classList.remove('active');
+      dropzone.style.display = 'none';
+      app.classList.add('active');
+      buildTabs();
+      selectMode('protan');
+      setSlider(50);
+      window.scrollTo({top: app.offsetTop - 20, behavior:'smooth'});
+    }, 30);
+  }
+
+  dropzone.addEventListener('click', ()=>fileInput.click());
+  fileInput.addEventListener('change', e=>handleFile(e.target.files[0]));
+  ['dragenter','dragover'].forEach(evt=>{
+    dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); });
+  });
+  dropzone.addEventListener('drop', e=>{
+    const file = e.dataTransfer.files[0];
+    handleFile(file);
+  });
+  newImageBtn.addEventListener('click', ()=>{
+    app.classList.remove('active');
+    dropzone.style.display = '';
+    fileInput.value='';
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  buildGrid();
+  bindSlider();
+})();
+</script>
+</body>
+</html>
