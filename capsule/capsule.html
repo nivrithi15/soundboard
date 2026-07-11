@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cosmic Archive — Time Capsules</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#05060f;
+    --bg-panel:#0e1128;
+    --bg-panel-2:#141838;
+    --accent-nebula:#7c5cfc;
+    --accent-nebula-dim:#4d3ba3;
+    --accent-stellar:#f0559c;
+    --accent-gold:#f5c56a;
+    --text-starlight:#f2f1fa;
+    --text-dim:#8d8fb0;
+    --border-glow:rgba(124,92,252,0.35);
+    --radius-lg:20px;
+    --radius-md:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg-void);
+    color:var(--text-starlight);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  #stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+  .nebula-blob{
+    position:fixed;border-radius:50%;filter:blur(90px);opacity:0.35;pointer-events:none;z-index:0;
+    animation:drift 26s ease-in-out infinite alternate;
+  }
+  .nebula-blob.b1{width:420px;height:420px;background:var(--accent-nebula);top:-120px;left:-100px;}
+  .nebula-blob.b2{width:380px;height:380px;background:var(--accent-stellar);bottom:-140px;right:-80px;animation-delay:-8s;}
+  .nebula-blob.b3{width:300px;height:300px;background:#2b8cff;top:40%;left:60%;animation-delay:-16s;}
+  @keyframes drift{
+    0%{transform:translate(0,0) scale(1);}
+    100%{transform:translate(40px,-30px) scale(1.12);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .nebula-blob{animation:none;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important;}
+  }
+
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:32px 24px 80px;}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .brand{display:flex;flex-direction:column;gap:6px;}
+  .brand .mark{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px;letter-spacing:0.5px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .brand .mark .glyph{
+    width:34px;height:34px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, var(--accent-gold) 40%, var(--accent-stellar) 75%, var(--accent-nebula) 100%);
+    box-shadow:0 0 22px rgba(240,85,156,0.55);
+    flex-shrink:0;
+  }
+  .brand .tagline{color:var(--text-dim);font-size:14px;max-width:420px;line-height:1.5;}
+  .stats-line{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin-top:2px;}
+  .stats-line b{color:var(--accent-gold);font-weight:600;}
+
+  .btn{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;
+    border:none;border-radius:999px;padding:12px 22px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;transition:transform .15s ease, box-shadow .15s ease, background .2s ease;
+  }
+  .btn:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px;}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--accent-nebula), var(--accent-stellar));
+    color:#fff;box-shadow:0 6px 22px rgba(124,92,252,0.35);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(124,92,252,0.5);}
+  .btn-ghost{
+    background:transparent;border:1px solid var(--border-glow);color:var(--text-starlight);
+  }
+  .btn-ghost:hover{background:rgba(124,92,252,0.12);}
+  .btn-danger{background:transparent;border:1px solid rgba(240,85,156,0.5);color:var(--accent-stellar);}
+  .btn-danger:hover{background:rgba(240,85,156,0.12);}
+
+  .tabs{display:flex;gap:8px;margin:28px 0 22px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .tab{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;color:var(--text-dim);
+    background:none;border:none;padding:10px 4px;cursor:pointer;position:relative;
+  }
+  .tab.active{color:var(--text-starlight);}
+  .tab.active::after{
+    content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;
+    background:linear-gradient(90deg,var(--accent-nebula),var(--accent-stellar));border-radius:2px;
+  }
+  .tab-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-left:6px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;}
+
+  .empty-state{
+    text-align:center;padding:70px 20px;color:var(--text-dim);
+    border:1px dashed var(--border-glow);border-radius:var(--radius-lg);
+  }
+  .empty-state .glyph{font-size:34px;margin-bottom:12px;display:block;}
+  .empty-state h3{font-family:'Space Grotesk',sans-serif;color:var(--text-starlight);margin:0 0 8px;font-size:18px;}
+  .empty-state p{margin:0 0 18px;font-size:14px;max-width:340px;margin-left:auto;margin-right:auto;}
+
+  /* Capsule card */
+  .capsule-card{
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:var(--radius-lg);
+    padding:22px 16px 18px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
+    cursor:pointer;transition:transform .18s ease, border-color .18s ease;
+    position:relative;
+  }
+  .capsule-card:hover{transform:translateY(-4px);border-color:var(--border-glow);}
+  .capsule-card:focus-visible{outline:2px solid var(--accent-gold);outline-offset:3px;}
+
+  .orb-wrap{position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center;}
+  .orbit-satellite{
+    position:absolute;inset:-10px;animation:spin 9s linear infinite;
+  }
+  .orbit-satellite span{
+    position:absolute;top:0;left:50%;width:6px;height:6px;margin-left:-3px;border-radius:50%;
+    background:var(--accent-gold);box-shadow:0 0 8px var(--accent-gold);
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .ring{position:absolute;inset:0;transform:rotate(-90deg);}
+  .ring-track{fill:none;stroke:rgba(255,255,255,0.08);stroke-width:4;}
+  .ring-progress{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1s linear;}
+  .capsule-card.locked .ring-progress{stroke:var(--accent-nebula);}
+  .capsule-card.unlocked .ring-progress{stroke:var(--accent-gold);}
+
+  .orb{
+    width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:22px;position:relative;z-index:1;
+  }
+  .capsule-card.locked .orb{
+    background:radial-gradient(circle at 35% 30%, #2b2f52, #14162c 70%);
+    box-shadow:inset 0 0 12px rgba(124,92,252,0.3), 0 0 16px rgba(124,92,252,0.15);
+  }
+  .capsule-card.unlocked .orb{
+    background:radial-gradient(circle at 35% 30%, #fff, var(--accent-gold) 45%, var(--accent-stellar) 90%);
+    box-shadow:0 0 24px rgba(245,197,106,0.6);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 18px rgba(245,197,106,0.5);}50%{box-shadow:0 0 30px rgba(245,197,106,0.85);}}
+
+  .capsule-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin:2px 0 0;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;}
+  .capsule-meta{font-size:12px;color:var(--text-dim);margin:0;}
+  .countdown-mono{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent-nebula);}
+  .capsule-card.unlocked .countdown-mono{color:var(--accent-gold);}
+  .badge-row{display:flex;gap:6px;margin-top:2px;}
+  .badge{
+    font-size:10px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:999px;
+    border:1px solid rgba(255,255,255,0.12);color:var(--text-dim);letter-spacing:0.4px;
+  }
+  .badge.pub{border-color:rgba(240,85,156,0.4);color:var(--accent-stellar);}
+  .badge.priv{border-color:rgba(124,92,252,0.4);color:var(--accent-nebula);}
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(3,4,10,0.75);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;
+  }
+  .overlay.show{opacity:1;pointer-events:auto;}
+  .modal{
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border:1px solid var(--border-glow);border-radius:var(--radius-lg);
+    max-width:480px;width:100%;max-height:88vh;overflow-y:auto;
+    padding:26px 24px 24px;position:relative;
+    transform:translateY(14px) scale(0.98);transition:transform .25s ease;
+  }
+  .overlay.show .modal{transform:translateY(0) scale(1);}
+  .modal h2{font-family:'Space Grotesk',sans-serif;font-size:20px;margin:0 0 4px;}
+  .modal .sub{color:var(--text-dim);font-size:13px;margin:0 0 20px;}
+  .close-x{
+    position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-dim);
+    font-size:20px;cursor:pointer;line-height:1;
+  }
+  .close-x:hover{color:var(--text-starlight);}
+
+  label{display:block;font-size:12px;color:var(--text-dim);margin:16px 0 6px;font-family:'Space Grotesk',sans-serif;}
+  label:first-of-type{margin-top:0;}
+  input[type=text], textarea, input[type=datetime-local]{
+    width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+    border-radius:10px;padding:11px 12px;color:var(--text-starlight);font-family:'Inter',sans-serif;font-size:14px;
+  }
+  input:focus, textarea:focus{outline:2px solid var(--accent-nebula);outline-offset:1px;border-color:transparent;}
+  textarea{resize:vertical;min-height:90px;}
+
+  .dropzone{
+    border:1px dashed var(--border-glow);border-radius:10px;padding:18px;text-align:center;
+    cursor:pointer;color:var(--text-dim);font-size:13px;position:relative;
+  }
+  .dropzone:hover{background:rgba(124,92,252,0.06);}
+  .dropzone img{max-width:100%;max-height:140px;border-radius:8px;margin-top:8px;display:block;margin-left:auto;margin-right:auto;}
+  .dropzone .remove-img{
+    display:inline-block;margin-top:8px;font-size:12px;color:var(--accent-stellar);cursor:pointer;
+  }
+
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px;
+    background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 12px;}
+  .toggle-row .label-txt{font-size:13px;color:var(--text-starlight);}
+  .toggle-row .label-sub{font-size:11px;color:var(--text-dim);}
+  .switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;inset:0;background:rgba(255,255,255,0.15);border-radius:999px;cursor:pointer;transition:.2s;}
+  .slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+  .switch input:checked + .slider{background:linear-gradient(135deg,var(--accent-nebula),var(--accent-stellar));}
+  .switch input:checked + .slider::before{transform:translateX(20px);}
+
+  .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;}
+  .error-txt{color:var(--accent-stellar);font-size:12px;margin-top:8px;min-height:14px;}
+
+  /* Detail view */
+  .detail-badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-gold);
+    border:1px solid rgba(245,197,106,0.4);border-radius:999px;padding:4px 10px;margin-bottom:14px;}
+  .detail-img{width:100%;border-radius:12px;margin:14px 0;display:block;}
+  .detail-msg{font-size:15px;line-height:1.7;white-space:pre-wrap;color:var(--text-starlight);}
+  .detail-author{margin-top:16px;font-size:12px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;}
+  .detail-lock{text-align:center;padding:30px 10px;}
+  .detail-lock .big-glyph{font-size:44px;display:block;margin-bottom:14px;}
+  .detail-lock .countdown-mono{font-size:20px;display:block;margin:10px 0;}
+
+  footer{text-align:center;color:var(--text-dim);font-size:12px;margin-top:60px;font-family:'JetBrains Mono',monospace;}
+
+  @media (max-width:520px){
+    .brand .mark{font-size:22px;}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+    .orb-wrap{width:84px;height:84px;}
+    .orb{width:52px;height:52px;font-size:18px;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div class="nebula-blob b1"></div>
+<div class="nebula-blob b2"></div>
+<div class="nebula-blob b3"></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="mark"><span class="glyph"></span> Cosmic Archive</div>
+      <p class="tagline">Send messages, photos, and notes across time. Seal them into a capsule, launch it into orbit, and it opens itself the moment your chosen date arrives.</p>
+      <div class="stats-line" id="statsLine">Scanning the archive…</div>
+    </div>
+    <button class="btn btn-primary" id="newCapsuleBtn">+ New Capsule</button>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="mine">My Capsules <span class="tab-count" id="countMine"></span></button>
+    <button class="tab" data-tab="public">Explore Public <span class="tab-count" id="countPublic"></span></button>
+  </nav>
+
+  <section id="panelMine"><div class="grid" id="gridMine"></div></section>
+  <section id="panelPublic" style="display:none;"><div class="grid" id="gridPublic"></div></section>
+
+  <footer>— transmitting since ${today}, coordinates unknown —</footer>
+</div>
+
+<!-- Create modal -->
+<div class="overlay" id="createOverlay">
+  <div class="modal">
+    <button class="close-x" id="closeCreate" aria-label="Close">✕</button>
+    <h2>Seal a new capsule</h2>
+    <p class="sub">Write it once. It won't open until the date you choose.</p>
+    <form id="capsuleForm">
+      <label for="fTitle">Title</label>
+      <input type="text" id="fTitle" maxlength="60" placeholder="A message to future me" required>
+
+      <label for="fMessage">Message</label>
+      <textarea id="fMessage" maxlength="4000" placeholder="Say what you'd want to hear later…" required></textarea>
+
+      <label>Photo (optional)</label>
+      <div class="dropzone" id="dropzone">
+        <div id="dropzoneText">Click to attach an image</div>
+        <input type="file" id="fImage" accept="image/*" style="display:none;">
+      </div>
+
+      <label for="fDate">Unlock date &amp; time</label>
+      <input type="datetime-local" id="fDate" required>
+
+      <div class="toggle-row">
+        <div>
+          <div class="label-txt">Make public</div>
+          <div class="label-sub">Visible to everyone in Explore, once unlocked</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="fPublic">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="authorField" style="display:none;">
+        <label for="fAuthor">Signed by (optional)</label>
+        <input type="text" id="fAuthor" maxlength="30" placeholder="Anonymous Traveler">
+      </div>
+
+      <div class="error-txt" id="formError"></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="cancelCreate">Cancel</button>
+        <button type="submit" class="btn btn-primary">Launch capsule</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal" id="detailModal"></div>
+</div>
+
+<script>
+(function(){
+  document.querySelector('footer').textContent = '— transmitting since ' + new Date().getFullYear() + ', coordinates unknown —';
+
+  /* ---------- Starfield background ---------- */
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const count = Math.floor((canvas.width*canvas.height)/9000);
+    stars = Array.from({length:count}, () => ({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*1.3+0.2,
+      p: Math.random()*Math.PI*2,
+      s: Math.random()*0.02+0.008
+    }));
+  }
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function drawStars(t){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(const st of stars){
+      const tw = reduceMotion ? 0.8 : (Math.sin(st.p + t*st.s*40)+1)/2*0.6+0.4;
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(242,241,250,'+tw+')';
+      ctx.fill();
+    }
+    if(!reduceMotion) requestAnimationFrame(drawStars);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(drawStars);
+
+  /* ---------- Storage helpers ---------- */
+  async function storeGet(key, shared){
+    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
+    catch(e){ return null; }
+  }
+  async function storeSet(key, value, shared){
+    try{ return await window.storage.set(key, value, shared); }
+    catch(e){ console.error('storage set failed', e); return null; }
+  }
+  async function storeDelete(key, shared){
+    try{ return await window.storage.delete(key, shared); }
+    catch(e){ return null; }
+  }
+  async function storeList(prefix, shared){
+    try{ const r = await window.storage.list(prefix, shared); return r ? r.keys : []; }
+    catch(e){ return []; }
+  }
+
+  function uid(){ return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+
+  /* ---------- App state ---------- */
+  let myCapsules = [];
+  let publicCapsules = [];
+  let activeTab = 'mine';
+  let pendingImage = null; // dataURL
+
+  async function loadAll(){
+    const mineKeys = await storeList('capsule:', false);
+    const mine = [];
+    for(const k of mineKeys){
+      const raw = await storeGet(k, false);
+      if(raw){ try{ mine.push(JSON.parse(raw)); }catch(e){} }
+    }
+    mine.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+    myCapsules = mine;
+
+    const pubKeys = await storeList('public:', true);
+    const pub = [];
+    for(const k of pubKeys){
+      const raw = await storeGet(k, true);
+      if(raw){ try{ pub.push(JSON.parse(raw)); }catch(e){} }
+    }
+    pub.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+    publicCapsules = pub;
+
+    render();
+  }
+
+  function fmtCountdown(msLeft){
+    if(msLeft <= 0) return 'unlocked';
+    const s = Math.floor(msLeft/1000);
+    const d = Math.floor(s/86400);
+    const h = Math.floor((s%86400)/3600);
+    const m = Math.floor((s%3600)/60);
+    const sec = s%60;
+    if(d > 0) return d+'d '+h+'h '+m+'m';
+    if(h > 0) return h+'h '+m+'m '+sec+'s';
+    return m+'m '+sec+'s';
+  }
+
+  function ringDashOffset(pct){
+    const r = 56, c = 2*Math.PI*r;
+    const clamped = Math.max(0, Math.min(1, pct));
+    return { circumference: c, offset: c*(1-clamped) };
+  }
+
+  function capsuleCard(cap){
+    const now = Date.now();
+    const unlockAt = new Date(cap.unlockAt).getTime();
+    const createdAt = new Date(cap.createdAt).getTime();
+    const locked = now < unlockAt;
+    const totalSpan = Math.max(unlockAt - createdAt, 1);
+    const pct = (now - createdAt) / totalSpan;
+    const {circumference, offset} = ringDashOffset(pct);
+
+    const card = document.createElement('div');
+    card.className = 'capsule-card ' + (locked ? 'locked' : 'unlocked');
+    card.tabIndex = 0;
+    card.setAttribute('role','button');
+    card.setAttribute('aria-label', (locked? 'Locked capsule: ':'Unlocked capsule: ') + cap.title);
+
+    card.innerHTML = `
+      <div class="orb-wrap">
+        ${locked ? '<div class="orbit-satellite"><span></span></div>' : ''}
+        <svg class="ring" viewBox="0 0 120 120">
+          <circle class="ring-track" cx="60" cy="60" r="56"></circle>
+          <circle class="ring-progress" cx="60" cy="60" r="56"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"></circle>
+        </svg>
+        <div class="orb">${locked ? '&#128274;' : '&#10022;'}</div>
+      </div>
+      <h3 class="capsule-title">${escapeHtml(cap.title)}</h3>
+      <p class="capsule-meta">${locked ? 'Unlocks ' + new Date(cap.unlockAt).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : 'Unlocked ' + new Date(cap.unlockAt).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</p>
+      <div class="countdown-mono" data-unlock="${cap.unlockAt}">${fmtCountdown(unlockAt-now)}</div>
+      <div class="badge-row">
+        <span class="badge ${cap.isPublic?'pub':'priv'}">${cap.isPublic?'public':'private'}</span>
+      </div>
+    `;
+    card.addEventListener('click', () => openDetail(cap));
+    card.addEventListener('keypress', (e) => { if(e.key==='Enter') openDetail(cap); });
+    return card;
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function render(){
+    const gridMine = document.getElementById('gridMine');
+    const gridPublic = document.getElementById('gridPublic');
+    gridMine.innerHTML = '';
+    gridPublic.innerHTML = '';
+
+    if(myCapsules.length === 0){
+      gridMine.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <span class="glyph">&#10024;</span>
+        <h3>Your archive is empty</h3>
+        <p>Send your first message into the future. It'll wait here quietly until it's time.</p>
+        <button class="btn btn-primary" onclick="document.getElementById('newCapsuleBtn').click()">+ New Capsule</button>
+      </div>`;
+    } else {
+      myCapsules.forEach(cap => gridMine.appendChild(capsuleCard(cap)));
+    }
+
+    if(publicCapsules.length === 0){
+      gridPublic.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <span class="glyph">&#127760;</span>
+        <h3>No transmissions yet</h3>
+        <p>No one has broadcast a public capsule yet. Be the first voice in the archive.</p>
+      </div>`;
+    } else {
+      publicCapsules.forEach(cap => gridPublic.appendChild(capsuleCard(cap)));
+    }
+
+    const lockedMine = myCapsules.filter(c => new Date(c.unlockAt).getTime() > Date.now()).length;
+    document.getElementById('countMine').textContent = myCapsules.length ? '('+myCapsules.length+')' : '';
+    document.getElementById('countPublic').textContent = publicCapsules.length ? '('+publicCapsules.length+')' : '';
+    document.getElementById('statsLine').textContent =
+      myCapsules.length === 0
+        ? 'No capsules launched yet'
+        : myCapsules.length + ' capsule' + (myCapsules.length!==1?'s':'') + ' in your archive · ' + lockedMine + ' still sealed · ' + (myCapsules.length-lockedMine) + ' ready to open';
+  }
+
+  /* live countdown tick */
+  setInterval(() => {
+    document.querySelectorAll('.countdown-mono[data-unlock]').forEach(el => {
+      const unlockAt = new Date(el.getAttribute('data-unlock')).getTime();
+      const msLeft = unlockAt - Date.now();
+      const wasLocked = el.closest('.capsule-card').classList.contains('locked');
+      if(msLeft <= 0 && wasLocked){
+        // transitioned to unlocked — re-render fully for ring/orb state
+        render();
+        return;
+      }
+      el.textContent = fmtCountdown(msLeft);
+    });
+  }, 1000);
+
+  /* ---------- Tabs ---------- */
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.dataset.tab;
+      document.getElementById('panelMine').style.display = activeTab==='mine' ? 'block' : 'none';
+      document.getElementById('panelPublic').style.display = activeTab==='public' ? 'block' : 'none';
+    });
+  });
+
+  /* ---------- Create modal ---------- */
+  const createOverlay = document.getElementById('createOverlay');
+  const detailOverlay = document.getElementById('detailOverlay');
+
+  document.getElementById('newCapsuleBtn').addEventListener('click', () => {
+    document.getElementById('capsuleForm').reset();
+    document.getElementById('dropzoneText').textContent = 'Click to attach an image';
+    pendingImage = null;
+    document.getElementById('authorField').style.display = 'none';
+    document.getElementById('formError').textContent = '';
+    const dz = document.getElementById('dropzone');
+    const oldPreview = dz.querySelector('img');
+    if(oldPreview) oldPreview.remove();
+    const oldRemove = dz.querySelector('.remove-img');
+    if(oldRemove) oldRemove.remove();
+    createOverlay.classList.add('show');
+  });
+  function closeCreateModal(){ createOverlay.classList.remove('show'); }
+  document.getElementById('closeCreate').addEventListener('click', closeCreateModal);
+  document.getElementById('cancelCreate').addEventListener('click', closeCreateModal);
+  createOverlay.addEventListener('click', (e) => { if(e.target === createOverlay) closeCreateModal(); });
+
+  document.getElementById('fPublic').addEventListener('change', (e) => {
+    document.getElementById('authorField').style.display = e.target.checked ? 'block' : 'none';
+  });
+
+  const dropzone = document.getElementById('dropzone');
+  const fImage = document.getElementById('fImage');
+  dropzone.addEventListener('click', () => fImage.click());
+  fImage.addEventListener('change', () => {
+    const file = fImage.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 640;
+        const scale = Math.min(1, maxW / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        pendingImage = c.toDataURL('image/jpeg', 0.72);
+        document.getElementById('dropzoneText').textContent = 'Image attached — click to replace';
+        let preview = dropzone.querySelector('img');
+        if(!preview){
+          preview = document.createElement('img');
+          dropzone.appendChild(preview);
+        }
+        preview.src = pendingImage;
+        let removeLink = dropzone.querySelector('.remove-img');
+        if(!removeLink){
+          removeLink = document.createElement('div');
+          removeLink.className = 'remove-img';
+          removeLink.textContent = 'Remove image';
+          removeLink.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pendingImage = null;
+            preview.remove();
+            removeLink.remove();
+            document.getElementById('dropzoneText').textContent = 'Click to attach an image';
+            fImage.value = '';
+          });
+          dropzone.appendChild(removeLink);
+        }
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('capsuleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('fTitle').value.trim();
+    const message = document.getElementById('fMessage').value.trim();
+    const dateVal = document.getElementById('fDate').value;
+    const isPublic = document.getElementById('fPublic').checked;
+    const author = document.getElementById('fAuthor').value.trim();
+    const errEl = document.getElementById('formError');
+    errEl.textContent = '';
+
+    if(!title || !message || !dateVal){
+      errEl.textContent = 'Fill in a title, message, and unlock date.';
+      return;
+    }
+    const unlockAt = new Date(dateVal);
+    if(unlockAt.getTime() <= Date.now()){
+      errEl.textContent = 'Pick a date and time in the future.';
+      return;
+    }
+
+    const cap = {
+      id: uid(),
+      title, message,
+      image: pendingImage,
+      unlockAt: unlockAt.toISOString(),
+      createdAt: new Date().toISOString(),
+      isPublic,
+      author: isPublic ? (author || 'Anonymous Traveler') : null
+    };
+
+    const submitBtn = e.target.querySelector('button[type=submit]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Launching…';
+
+    await storeSet('capsule:'+cap.id, JSON.stringify(cap), false);
+    if(isPublic){
+      await storeSet('public:'+cap.id, JSON.stringify(cap), true);
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Launch capsule';
+    closeCreateModal();
+    await loadAll();
+  });
+
+  /* ---------- Detail modal ---------- */
+  function closeDetail(){ detailOverlay.classList.remove('show'); }
+  detailOverlay.addEventListener('click', (e) => { if(e.target === detailOverlay) closeDetail(); });
+
+  function openDetail(cap){
+    const now = Date.now();
+    const unlockAt = new Date(cap.unlockAt).getTime();
+    const locked = now < unlockAt;
+    const modal = document.getElementById('detailModal');
+    const isMine = myCapsules.some(c => c.id === cap.id);
+
+    if(locked){
+      modal.innerHTML = `
+        <button class="close-x" id="closeDetailBtn">✕</button>
+        <div class="detail-lock">
+          <span class="big-glyph">&#128274;</span>
+          <h2>${escapeHtml(cap.title)}</h2>
+          <p class="sub">Sealed ${cap.isPublic ? 'transmission' : 'capsule'}. It opens on its own.</p>
+          <span class="countdown-mono" data-unlock="${cap.unlockAt}">${fmtCountdown(unlockAt-now)}</span>
+          <p class="capsule-meta">Opens ${new Date(cap.unlockAt).toLocaleString()}</p>
+        </div>
+        ${isMine ? '<div class="form-actions"><button class="btn btn-danger" id="deleteBtn">Delete capsule</button></div>' : ''}
+      `;
+    } else {
+      modal.innerHTML = `
+        <button class="close-x" id="closeDetailBtn">✕</button>
+        <span class="detail-badge">&#10022; unlocked ${new Date(cap.unlockAt).toLocaleDateString()}</span>
+        <h2>${escapeHtml(cap.title)}</h2>
+        ${cap.image ? `<img class="detail-img" src="${cap.image}" alt="Attached memory">` : ''}
+        <div class="detail-msg">${escapeHtml(cap.message)}</div>
+        ${cap.isPublic ? `<div class="detail-author">— ${escapeHtml(cap.author || 'Anonymous Traveler')}</div>` : ''}
+        ${isMine ? '<div class="form-actions"><button class="btn btn-danger" id="deleteBtn">Delete capsule</button></div>' : ''}
+      `;
+    }
+
+    detailOverlay.classList.add('show');
+    document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
+    const delBtn = document.getElementById('deleteBtn');
+    if(delBtn){
+      delBtn.addEventListener('click', async () => {
+        delBtn.disabled = true;
+        delBtn.textContent = 'Deleting…';
+        await storeDelete('capsule:'+cap.id, false);
+        if(cap.isPublic) await storeDelete('public:'+cap.id, true);
+        closeDetail();
+        await loadAll();
+      });
+    }
+  }
+
+  loadAll();
+})();
+</script>
+</body>
+</html>
