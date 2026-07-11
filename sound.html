@@ -1,943 +1,706 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Soundboard</title>
-    <style>
-        /* ---------- reset & base ---------- */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAD-12 // Soundboard</title>
+<style>
+  :root{
+    --chassis: #1c1b19;
+    --chassis-hi: #26241f;
+    --panel: #2e2b26;
+    --panel-lo: #221f1c;
+    --cream: #ede6d6;
+    --cream-dim: #a89f8c;
+    --amber: #ff9b3d;
+    --amber-dim: #7a4c1f;
+    --teal: #4fb6a8;
+    --red: #d64545;
+    --red-dim: #5c2323;
+    font-family: 'JetBrains Mono','IBM Plex Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    min-height:100%;
+    background:
+      radial-gradient(ellipse at 50% -10%, #34312b 0%, transparent 60%),
+      var(--chassis);
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px 14px;
+  }
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: radial-gradient(ellipse at center, #1b1e2a 0%, #0f1118 100%);
-            padding: 20px;
-        }
+  .unit{
+    width:100%;
+    max-width:640px;
+    background:linear-gradient(180deg,var(--chassis-hi),var(--chassis));
+    border-radius:18px;
+    padding:22px 22px 26px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(0,0,0,0.6);
+    position:relative;
+  }
 
-        /* ---------- card ---------- */
-        .board {
-            max-width: 780px;
-            width: 100%;
-            background: rgba(30, 34, 48, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 40px;
-            padding: 32px 28px 36px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            transition: all 0.2s;
-        }
+  /* screw details */
+  .unit::before, .unit::after{
+    content:"";
+    position:absolute;
+    width:6px;height:6px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #555 0%, #111 70%);
+    box-shadow:0 0 0 1px rgba(0,0,0,0.6);
+  }
+  .unit::before{ top:14px; left:14px; }
+  .unit::after{ bottom:14px; right:14px; }
 
-        /* ---------- header ---------- */
-        .header {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px 20px;
-            margin-bottom: 28px;
-        }
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:16px;
+    padding:0 4px;
+  }
+  .brand{
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:0.22em;
+    color:var(--cream);
+  }
+  .brand span{ color:var(--amber); }
+  .subtext{
+    font-size:9px;
+    letter-spacing:0.14em;
+    color:var(--cream-dim);
+    text-transform:uppercase;
+  }
 
-        .header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-            color: #f0f2fa;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+  .readout{
+    background:var(--panel-lo);
+    border-radius:8px;
+    padding:9px 12px;
+    margin-bottom:16px;
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    color:var(--teal);
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(0,0,0,0.5);
+    display:flex;
+    justify-content:space-between;
+    min-height:14px;
+  }
+  .readout .dot{
+    display:inline-block;
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--teal);
+    margin-right:7px;
+    box-shadow:0 0 6px var(--teal);
+    vertical-align:middle;
+    animation:blink 2.4s infinite;
+  }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
 
-        .header h1 span {
-            background: linear-gradient(135deg, #a78bfa, #7c3aed);
-            font-size: 16px;
-            padding: 2px 14px;
-            border-radius: 40px;
-            font-weight: 600;
-            color: #fff;
-            letter-spacing: 0.3px;
-        }
+  .pads{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:10px;
+    margin-bottom:18px;
+  }
 
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
+  .pad{
+    position:relative;
+    aspect-ratio:1/0.86;
+    background:linear-gradient(160deg, #38352f, var(--panel) 55%, var(--panel-lo));
+    border:none;
+    border-radius:10px;
+    color:var(--cream);
+    cursor:pointer;
+    padding:9px 10px;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    box-shadow:
+      0 3px 0 rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -10px 16px rgba(0,0,0,0.25);
+    transition:transform 0.05s ease, box-shadow 0.05s ease;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+  }
+  .pad:hover{ filter:brightness(1.06); }
+  .pad:active,
+  .pad.hit{
+    transform:translateY(3px);
+    box-shadow:
+      0 0 0 rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      inset 0 -4px 10px rgba(0,0,0,0.35);
+  }
+  .pad.hit{
+    background:linear-gradient(160deg, #4a3e2c, #3a2f20 55%, #2a2118);
+  }
+  .pad.hit .key{
+    color:var(--chassis);
+    background:var(--amber);
+    box-shadow:0 0 10px var(--amber), 0 0 22px rgba(255,155,61,0.5);
+  }
+  .pad.hit .name{ color:var(--amber); }
 
-        /* ---------- volume control ---------- */
-        .volume-wrap {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.04);
-            padding: 6px 16px 6px 18px;
-            border-radius: 60px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
+  .pad.active{
+    background:linear-gradient(160deg, #3c3324, #322a1d 55%, #241d14);
+    box-shadow:
+      0 3px 0 rgba(0,0,0,0.55),
+      0 0 0 1px var(--amber-dim),
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -10px 16px rgba(0,0,0,0.25);
+  }
+  .pad.active .name{ color:var(--amber); }
+  .pad.active .key{
+    color:var(--chassis);
+    background:var(--amber-dim);
+  }
+  .pad.active::after{
+    content:"";
+    position:absolute;
+    top:9px; right:10px;
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 8px var(--amber);
+    animation:blink 0.9s infinite;
+  }
 
-        .volume-wrap .icon {
-            font-size: 18px;
-            color: #9aa0b8;
-            line-height: 1;
-        }
+  .key{
+    align-self:flex-start;
+    font-size:9.5px;
+    font-weight:700;
+    color:var(--cream-dim);
+    background:rgba(0,0,0,0.35);
+    border-radius:4px;
+    padding:2px 5px;
+    letter-spacing:0.04em;
+    transition:all 0.08s ease;
+  }
+  .name{
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:0.03em;
+    line-height:1.15;
+    color:var(--cream);
+    transition:color 0.08s ease;
+  }
+  .tag{
+    font-size:8px;
+    color:var(--cream-dim);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+  }
 
-        .volume-wrap input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 110px;
-            height: 4px;
-            border-radius: 4px;
-            background: linear-gradient(90deg, #7c3aed, #a78bfa);
-            outline: none;
-            transition: opacity 0.2s;
-            cursor: pointer;
-        }
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:var(--panel-lo);
+    border-radius:10px;
+    padding:13px 14px;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(0,0,0,0.5);
+  }
 
-        .volume-wrap input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #f0f2fa;
-            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.5);
-            border: 2px solid #7c3aed;
-            cursor: pointer;
-            transition: 0.15s;
-        }
+  .vol-block{
+    flex:1;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .vol-label{
+    font-size:9.5px;
+    letter-spacing:0.12em;
+    color:var(--cream-dim);
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .vol-label span{ color:var(--amber); font-weight:700; }
 
-        .volume-wrap input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.12);
-            background: #fff;
-        }
+  input[type="range"]{
+    -webkit-appearance:none;
+    appearance:none;
+    flex:1;
+    height:4px;
+    border-radius:3px;
+    background:linear-gradient(90deg, var(--amber-dim), var(--amber) var(--fill,60%), #46423a var(--fill,60%));
+    outline:none;
+    min-width:70px;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:4px;
+    background:linear-gradient(160deg,#fff,var(--cream));
+    box-shadow:0 2px 4px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.4);
+    cursor:pointer;
+    margin-top:0;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:16px;height:16px;
+    border:none;
+    border-radius:4px;
+    background:linear-gradient(160deg,#fff,var(--cream));
+    box-shadow:0 2px 4px rgba(0,0,0,0.6);
+    cursor:pointer;
+  }
+  input[type="range"]::-moz-range-track{
+    height:4px;
+    border-radius:3px;
+    background:#46423a;
+  }
 
-        .volume-wrap input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #f0f2fa;
-            border: 2px solid #7c3aed;
-            cursor: pointer;
-        }
+  .stop-btn{
+    flex-shrink:0;
+    background:linear-gradient(160deg,#a83737,var(--red) 45%,#8a2f2f);
+    border:none;
+    color:#fff2ee;
+    font-family:inherit;
+    font-weight:700;
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    padding:11px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--red-dim), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition:transform 0.05s ease, box-shadow 0.05s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .stop-btn:hover{ filter:brightness(1.08); }
+  .stop-btn:active, .stop-btn.pressed{
+    transform:translateY(3px);
+    box-shadow:0 0 0 var(--red-dim), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
 
-        .volume-value {
-            min-width: 38px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: #c8cee6;
-            letter-spacing: 0.3px;
-        }
+  footer{
+    text-align:center;
+    margin-top:14px;
+    font-size:8.5px;
+    letter-spacing:0.1em;
+    color:#5c574c;
+    text-transform:uppercase;
+  }
 
-        /* ---------- stop all button ---------- */
-        .btn-stop {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.25);
-            color: #f87171;
-            padding: 8px 20px;
-            border-radius: 60px;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 0.2px;
-            backdrop-filter: blur(4px);
-        }
-
-        .btn-stop:hover {
-            background: rgba(239, 68, 68, 0.25);
-            border-color: rgba(239, 68, 68, 0.45);
-            transform: scale(1.02);
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
-        }
-
-        .btn-stop:active {
-            transform: scale(0.96);
-        }
-
-        .btn-stop .icon {
-            font-size: 18px;
-        }
-
-        /* ---------- grid ---------- */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 14px;
-        }
-
-        /* ---------- sound button ---------- */
-        .sound-btn {
-            position: relative;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 20px;
-            padding: 18px 6px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #e8ebf5;
-            font-weight: 500;
-            font-size: 13px;
-            letter-spacing: 0.2px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .sound-btn .emoji {
-            font-size: 32px;
-            line-height: 1;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-            transition: transform 0.15s;
-        }
-
-        .sound-btn .label {
-            font-size: 12px;
-            opacity: 0.8;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-        }
-
-        .sound-btn:hover {
-            background: rgba(255, 255, 255, 0.09);
-            border-color: rgba(167, 139, 250, 0.3);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-        }
-
-        .sound-btn:hover .emoji {
-            transform: scale(1.12);
-        }
-
-        .sound-btn:active {
-            transform: scale(0.92);
-            background: rgba(124, 58, 237, 0.2);
-            border-color: rgba(124, 58, 237, 0.4);
-            transition-duration: 0.05s;
-        }
-
-        .sound-btn .badge {
-            position: absolute;
-            top: 6px;
-            right: 8px;
-            font-size: 9px;
-            background: rgba(124, 58, 237, 0.3);
-            padding: 1px 8px;
-            border-radius: 20px;
-            color: #c4b5fd;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        /* ---------- active state (visual feedback) ---------- */
-        .sound-btn.active {
-            background: rgba(124, 58, 237, 0.2);
-            border-color: #7c3aed;
-            box-shadow: 0 0 30px rgba(124, 58, 237, 0.15);
-        }
-
-        /* ---------- responsive ---------- */
-        @media (max-width: 600px) {
-            .board {
-                padding: 24px 16px 28px;
-                border-radius: 28px;
-            }
-
-            .header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 14px;
-            }
-
-            .header h1 {
-                font-size: 20px;
-                justify-content: center;
-            }
-
-            .controls {
-                justify-content: center;
-            }
-
-            .volume-wrap input[type="range"] {
-                width: 90px;
-            }
-
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-                gap: 10px;
-            }
-
-            .sound-btn {
-                padding: 14px 4px 12px;
-                border-radius: 16px;
-            }
-
-            .sound-btn .emoji {
-                font-size: 26px;
-            }
-
-            .sound-btn .label {
-                font-size: 10px;
-            }
-        }
-
-        @media (max-width: 420px) {
-            .grid {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-
-            .volume-wrap {
-                padding: 4px 12px 4px 14px;
-            }
-
-            .volume-wrap input[type="range"] {
-                width: 70px;
-            }
-
-            .btn-stop {
-                padding: 6px 14px;
-                font-size: 12px;
-            }
-        }
-
-        /* ---------- key hint (optional) ---------- */
-        .key-hint {
-            font-size: 9px;
-            opacity: 0.3;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            margin-top: 2px;
-        }
-    </style>
+  @media (max-width:420px){
+    .name{ font-size:10px; }
+    .vol-label{ display:none; }
+  }
+</style>
 </head>
 <body>
 
-    <div class="board" role="main" aria-label="Soundboard">
-
-        <!-- header -->
-        <div class="header">
-            <h1>
-                🔊 Soundboard
-                <span>12</span>
-            </h1>
-            <div class="controls">
-                <!-- volume -->
-                <div class="volume-wrap">
-                    <span class="icon">🔉</span>
-                    <input type="range" id="volumeSlider" min="0" max="100" value="80" aria-label="Master volume" />
-                    <span class="volume-value" id="volumeDisplay">80%</span>
-                </div>
-                <!-- stop all -->
-                <button class="btn-stop" id="stopAllBtn" aria-label="Stop all sounds">
-                    <span class="icon">⏹</span> Stop All
-                </button>
-            </div>
-        </div>
-
-        <!-- grid -->
-        <div class="grid" id="soundGrid"></div>
-
+<div class="unit">
+  <header>
+    <div>
+      <div class="brand">PAD<span>-12</span></div>
+      <div class="subtext">Twelve-Voice Soundboard</div>
     </div>
+    <div class="subtext" style="text-align:right;">No samples<br>synthesized live</div>
+  </header>
 
-    <script>
-        (function() {
-            'use strict';
+  <div class="readout" id="readout"><span><span class="dot"></span>READY</span><span id="voiceCount">0 VOICES</span></div>
 
-            // ---------- Audio Context (lazy init) ----------
-            let audioCtx = null;
+  <div class="pads" id="pads"></div>
 
-            function getAudioContext() {
-                if (!audioCtx) {
-                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                return audioCtx;
-            }
+  <div class="controls">
+    <div class="vol-block">
+      <span class="vol-label">VOL <span id="volVal">70</span></span>
+      <input type="range" id="volume" min="0" max="100" value="70" style="--fill:70%">
+    </div>
+    <button class="stop-btn" id="stopAll">■ Stop All</button>
+  </div>
 
-            // ---------- master gain ----------
-            let masterGain = null;
+  <footer>Press a pad to loop it &middot; press again (or Stop All) to silence it &middot; any number of pads can loop together</footer>
+</div>
 
-            function getMasterGain() {
-                if (!masterGain) {
-                    const ctx = getAudioContext();
-                    masterGain = ctx.createGain();
-                    masterGain.gain.value = 0.80; // default 80%
-                    masterGain.connect(ctx.destination);
-                }
-                return masterGain;
-            }
+<script>
+(function(){
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new AudioCtx();
+  const master = ctx.createGain();
+  master.gain.value = 0.7;
+  master.connect(ctx.destination);
 
-            // ---------- volume control ----------
-            const volumeSlider = document.getElementById('volumeSlider');
-            const volumeDisplay = document.getElementById('volumeDisplay');
+  const volSlider = document.getElementById('volume');
+  const volVal = document.getElementById('volVal');
+  volSlider.addEventListener('input', () => {
+    const v = Number(volSlider.value);
+    master.gain.setTargetAtTime(v/100, ctx.currentTime, 0.01);
+    volVal.textContent = v;
+    volSlider.style.setProperty('--fill', v + '%');
+  });
 
-            volumeSlider.addEventListener('input', function() {
-                const val = parseInt(this.value, 10);
-                const norm = val / 100;
-                volumeDisplay.textContent = val + '%';
-                if (masterGain) {
-                    masterGain.gain.setTargetAtTime(norm, audioCtx ? audioCtx.currentTime : 0, 0.02);
-                }
-            });
+  // ---------- noise buffer helper ----------
+  let noiseBuffer = null;
+  function getNoiseBuffer(){
+    if(noiseBuffer) return noiseBuffer;
+    const len = ctx.sampleRate * 1.2;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for(let i=0;i<len;i++) data[i] = Math.random()*2-1;
+    noiseBuffer = buf;
+    return buf;
+  }
 
-            // ---------- sound definitions ----------
-            const sounds = [{
-                id: 'pop',
-                label: 'Pop',
-                emoji: '🔘',
-                key: '1'
-            }, {
-                id: 'click',
-                label: 'Click',
-                emoji: '🖱️',
-                key: '2'
-            }, {
-                id: 'bell',
-                label: 'Bell',
-                emoji: '🔔',
-                key: '3'
-            }, {
-                id: 'drum',
-                label: 'Drum',
-                emoji: '🥁',
-                key: '4'
-            }, {
-                id: 'cymbal',
-                label: 'Cymbal',
-                emoji: '🔊',
-                key: '5'
-            }, {
-                id: 'laser',
-                label: 'Laser',
-                emoji: '🔫',
-                key: '6'
-            }, {
-                id: 'whistle',
-                label: 'Whistle',
-                emoji: '🎵',
-                key: '7'
-            }, {
-                id: 'bounce',
-                label: 'Bounce',
-                emoji: '⚾',
-                key: '8'
-            }, {
-                id: 'scratch',
-                label: 'Scratch',
-                emoji: '💿',
-                key: '9'
-            }, {
-                id: 'synth',
-                label: 'Synth',
-                emoji: '🎹',
-                key: '0'
-            }, {
-                id: 'kick',
-                label: 'Kick',
-                emoji: '🦵',
-                key: '-'
-            }, {
-                id: 'snare',
-                label: 'Snare',
-                emoji: '🥾',
-                key: '='
-            }];
+  // ---------- active voice tracking ----------
+  const activeVoices = new Set();
+  const voiceCountEl = document.getElementById('voiceCount');
+  function updateVoiceCount(){
+    voiceCountEl.textContent = activeVoices.size + (activeVoices.size===1 ? ' VOICE' : ' VOICES');
+  }
+  function registerVoice(voice){
+    activeVoices.add(voice);
+    updateVoiceCount();
+  }
+  function unregisterVoice(voice){
+    activeVoices.delete(voice);
+    updateVoiceCount();
+  }
 
-            // ---------- active oscillators / nodes ----------
-            const activeNodes = new Set();
+  // Each sound function returns a "voice" object: { kill() }
+  // Nodes schedule their own natural stop/onended cleanup.
 
-            function stopAllSounds() {
-                for (const node of activeNodes) {
-                    try {
-                        node.stop && node.stop();
-                        node.disconnect && node.disconnect();
-                    } catch (_) { /* ignore */ }
-                }
-                activeNodes.clear();
-                // remove active class from all buttons
-                document.querySelectorAll('.sound-btn.active').forEach(el => el.classList.remove('active'));
-            }
+  function makeVoice(nodes, gains, endTime){
+    const voice = {
+      nodes, gains, endTime,
+      killed:false,
+      kill(){
+        if(this.killed) return;
+        this.killed = true;
+        const now = ctx.currentTime;
+        gains.forEach(g=>{
+          try{
+            g.gain.cancelScheduledValues(now);
+            const cur = g.gain.value;
+            g.gain.setValueAtTime(cur, now);
+            g.gain.linearRampToValueAtTime(0.0001, now+0.035);
+          }catch(e){}
+        });
+        nodes.forEach(n=>{
+          try{ n.stop(now+0.05); }catch(e){}
+        });
+      }
+    };
+    return voice;
+  }
 
-            // ---------- sound generators ----------
-            function playSound(id) {
-                const ctx = getAudioContext();
-                const master = getMasterGain();
-                const now = ctx.currentTime;
+  function scheduleCleanup(voice, primaryNode){
+    primaryNode.onended = () => unregisterVoice(voice);
+  }
 
-                // helper: create a short noise burst
-                function noiseBurst(duration, freq, type, volume, ramp) {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = type || 'sawtooth';
-                    osc.frequency.setValueAtTime(freq || 440, now);
-                    gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(volume || 0.3, now + 0.005);
-                    if (ramp) {
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-                    } else {
-                        gain.gain.linearRampToValueAtTime(0, now + duration);
-                    }
-                    osc.connect(gain);
-                    gain.connect(master);
-                    osc.start(now);
-                    osc.stop(now + duration);
-                    activeNodes.add(osc);
-                    activeNodes.add(gain);
-                    setTimeout(() => {
-                        activeNodes.delete(osc);
-                        activeNodes.delete(gain);
-                    }, (duration + 0.05) * 1000);
-                    return { osc, gain };
-                }
+  // ---------- sound designs ----------
 
-                // helper: short click / pop
-                function quickPop(duration, freq, vol) {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq || 600, now);
-                    gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(vol || 0.25, now + 0.01);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-                    osc.connect(gain);
-                    gain.connect(master);
-                    osc.start(now);
-                    osc.stop(now + duration);
-                    activeNodes.add(osc);
-                    activeNodes.add(gain);
-                    setTimeout(() => {
-                        activeNodes.delete(osc);
-                        activeNodes.delete(gain);
-                    }, (duration + 0.05) * 1000);
-                }
+  function playKick(){
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(42, now+0.13);
+    gain.gain.setValueAtTime(1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now+0.32);
+    osc.connect(gain); gain.connect(master);
+    osc.start(now); osc.stop(now+0.34);
+    const voice = makeVoice([osc],[gain], now+0.34);
+    scheduleCleanup(voice, osc);
+    return voice;
+  }
 
-                // helper: noise burst via buffer
-                function noiseBurstBuffer(duration, vol, freqFilter) {
-                    const bufferSize = ctx.sampleRate * duration;
-                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                    const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) {
-                        data[i] = (Math.random() * 2 - 1);
-                    }
-                    const src = ctx.createBufferSource();
-                    src.buffer = buffer;
-                    const gain = ctx.createGain();
-                    gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(vol || 0.2, now + 0.01);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-                    const filter = ctx.createBiquadFilter();
-                    filter.type = 'lowpass';
-                    filter.frequency.value = freqFilter || 2000;
-                    src.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(master);
-                    src.start(now);
-                    src.stop(now + duration);
-                    activeNodes.add(src);
-                    activeNodes.add(gain);
-                    activeNodes.add(filter);
-                    setTimeout(() => {
-                        activeNodes.delete(src);
-                        activeNodes.delete(gain);
-                        activeNodes.delete(filter);
-                    }, (duration + 0.05) * 1000);
-                }
+  function playSnare(){
+    const now = ctx.currentTime;
+    const noise = ctx.createBufferSource();
+    noise.buffer = getNoiseBuffer();
+    const bp = ctx.createBiquadFilter();
+    bp.type='bandpass'; bp.frequency.value=1800; bp.Q.value=0.7;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(1, now);
+    ng.gain.exponentialRampToValueAtTime(0.001, now+0.18);
+    noise.connect(bp); bp.connect(ng); ng.connect(master);
 
-                // ---------- dispatch by id ----------
-                switch (id) {
-                    case 'pop':
-                        quickPop(0.08, 800, 0.3);
-                        quickPop(0.06, 1200, 0.15);
-                        break;
+    const osc = ctx.createOscillator();
+    osc.type='triangle';
+    osc.frequency.setValueAtTime(190, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now+0.1);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0.6, now);
+    og.gain.exponentialRampToValueAtTime(0.001, now+0.12);
+    osc.connect(og); og.connect(master);
 
-                    case 'click':
-                        quickPop(0.04, 1500, 0.2);
-                        quickPop(0.03, 2000, 0.1);
-                        break;
+    noise.start(now); noise.stop(now+0.2);
+    osc.start(now); osc.stop(now+0.14);
 
-                    case 'bell': {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(1200, now);
-                        osc.frequency.exponentialRampToValueAtTime(600, now + 0.4);
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-                        osc.connect(gain);
-                        gain.connect(master);
-                        osc.start(now);
-                        osc.stop(now + 0.8);
-                        activeNodes.add(osc);
-                        activeNodes.add(gain);
-                        setTimeout(() => {
-                            activeNodes.delete(osc);
-                            activeNodes.delete(gain);
-                        }, 900);
-                        // add a faint harmonic
-                        const osc2 = ctx.createOscillator();
-                        const g2 = ctx.createGain();
-                        osc2.type = 'sine';
-                        osc2.frequency.setValueAtTime(1800, now);
-                        osc2.frequency.exponentialRampToValueAtTime(900, now + 0.3);
-                        g2.gain.setValueAtTime(0, now);
-                        g2.gain.linearRampToValueAtTime(0.06, now + 0.02);
-                        g2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-                        osc2.connect(g2);
-                        g2.connect(master);
-                        osc2.start(now);
-                        osc2.stop(now + 0.6);
-                        activeNodes.add(osc2);
-                        activeNodes.add(g2);
-                        setTimeout(() => {
-                            activeNodes.delete(osc2);
-                            activeNodes.delete(g2);
-                        }, 700);
-                        break;
-                    }
+    const voice = makeVoice([noise,osc],[ng,og], now+0.2);
+    scheduleCleanup(voice, noise);
+    return voice;
+  }
 
-                    case 'drum':
-                        noiseBurstBuffer(0.12, 0.35, 400);
-                        // low thump
-                        (function() {
-                            const o = ctx.createOscillator();
-                            const g = ctx.createGain();
-                            o.type = 'sine';
-                            o.frequency.setValueAtTime(150, now);
-                            o.frequency.exponentialRampToValueAtTime(60, now + 0.1);
-                            g.gain.setValueAtTime(0, now);
-                            g.gain.linearRampToValueAtTime(0.3, now + 0.01);
-                            g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-                            o.connect(g);
-                            g.connect(master);
-                            o.start(now);
-                            o.stop(now + 0.1);
-                            activeNodes.add(o);
-                            activeNodes.add(g);
-                            setTimeout(() => {
-                                activeNodes.delete(o);
-                                activeNodes.delete(g);
-                            }, 200);
-                        })();
-                        break;
+  function playClap(){
+    const now = ctx.currentTime;
+    const nodes=[], gains=[];
+    [0,0.02,0.045].forEach(delay=>{
+      const noise = ctx.createBufferSource();
+      noise.buffer = getNoiseBuffer();
+      const bp = ctx.createBiquadFilter();
+      bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=1.4;
+      const g = ctx.createGain();
+      const start = now+delay;
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.linearRampToValueAtTime(0.9, start+0.005);
+      g.gain.exponentialRampToValueAtTime(0.001, start+0.15);
+      noise.connect(bp); bp.connect(g); g.connect(master);
+      noise.start(start); noise.stop(start+0.16);
+      nodes.push(noise); gains.push(g);
+    });
+    const voice = makeVoice(nodes, gains, now+0.2);
+    scheduleCleanup(voice, nodes[nodes.length-1]);
+    return voice;
+  }
 
-                    case 'cymbal':
-                        noiseBurstBuffer(0.5, 0.2, 4000);
-                        noiseBurstBuffer(0.3, 0.1, 8000);
-                        break;
+  function playHat(open){
+    const now = ctx.currentTime;
+    const dur = open ? 0.5 : 0.09;
+    const noise = ctx.createBufferSource();
+    noise.buffer = getNoiseBuffer();
+    const hp = ctx.createBiquadFilter();
+    hp.type='highpass'; hp.frequency.value=7000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.8, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now+dur);
+    noise.connect(hp); hp.connect(g); g.connect(master);
+    noise.start(now); noise.stop(now+dur+0.02);
+    const voice = makeVoice([noise],[g], now+dur);
+    scheduleCleanup(voice, noise);
+    return voice;
+  }
 
-                    case 'laser': {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(180, now);
-                        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(0.12, now + 0.02);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                        osc.connect(gain);
-                        gain.connect(master);
-                        osc.start(now);
-                        osc.stop(now + 0.3);
-                        activeNodes.add(osc);
-                        activeNodes.add(gain);
-                        setTimeout(() => {
-                            activeNodes.delete(osc);
-                            activeNodes.delete(gain);
-                        }, 400);
-                        break;
-                    }
+  function playTom(){
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(210, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now+0.28);
+    gain.gain.setValueAtTime(1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now+0.45);
+    osc.connect(gain); gain.connect(master);
+    osc.start(now); osc.stop(now+0.46);
+    const voice = makeVoice([osc],[gain], now+0.46);
+    scheduleCleanup(voice, osc);
+    return voice;
+  }
 
-                    case 'whistle': {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(500, now);
-                        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
-                        osc.frequency.exponentialRampToValueAtTime(800, now + 0.3);
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(0.15, now + 0.03);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-                        osc.connect(gain);
-                        gain.connect(master);
-                        osc.start(now);
-                        osc.stop(now + 0.35);
-                        activeNodes.add(osc);
-                        activeNodes.add(gain);
-                        setTimeout(() => {
-                            activeNodes.delete(osc);
-                            activeNodes.delete(gain);
-                        }, 450);
-                        break;
-                    }
+  function playRimshot(){
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type='square';
+    osc.frequency.value=1600;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.5, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now+0.045);
+    osc.connect(g); g.connect(master);
+    osc.start(now); osc.stop(now+0.05);
+    const voice = makeVoice([osc],[g], now+0.05);
+    scheduleCleanup(voice, osc);
+    return voice;
+  }
 
-                    case 'bounce': {
-                        // two quick tones descending
-                        for (let i = 0; i < 3; i++) {
-                            const delay = i * 0.07;
-                            const osc = ctx.createOscillator();
-                            const gain = ctx.createGain();
-                            osc.type = 'sine';
-                            const freq = 800 - i * 180;
-                            osc.frequency.setValueAtTime(freq, now + delay);
-                            gain.gain.setValueAtTime(0, now + delay);
-                            gain.gain.linearRampToValueAtTime(0.15 - i * 0.03, now + delay + 0.01);
-                            gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.08);
-                            osc.connect(gain);
-                            gain.connect(master);
-                            osc.start(now + delay);
-                            osc.stop(now + delay + 0.08);
-                            activeNodes.add(osc);
-                            activeNodes.add(gain);
-                            setTimeout(() => {
-                                activeNodes.delete(osc);
-                                activeNodes.delete(gain);
-                            }, (delay + 0.15) * 1000);
-                        }
-                        break;
-                    }
+  function playCowbell(){
+    const now = ctx.currentTime;
+    const bp = ctx.createBiquadFilter();
+    bp.type='bandpass'; bp.frequency.value=2640; bp.Q.value=2.2;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.7, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now+0.32);
+    bp.connect(g); g.connect(master);
 
-                    case 'scratch': {
-                        // two noise bursts with pitch sweep
-                        const dur = 0.18;
-                        const bufferSize = ctx.sampleRate * dur;
-                        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                        const data = buffer.getChannelData(0);
-                        for (let i = 0; i < bufferSize; i++) {
-                            data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-                        }
-                        const src = ctx.createBufferSource();
-                        src.buffer = buffer;
-                        const gain = ctx.createGain();
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(0.15, now + 0.01);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-                        const filter = ctx.createBiquadFilter();
-                        filter.type = 'bandpass';
-                        filter.frequency.setValueAtTime(2500, now);
-                        filter.frequency.exponentialRampToValueAtTime(600, now + dur);
-                        filter.Q.value = 0.5;
-                        src.connect(filter);
-                        filter.connect(gain);
-                        gain.connect(master);
-                        src.start(now);
-                        src.stop(now + dur);
-                        activeNodes.add(src);
-                        activeNodes.add(gain);
-                        activeNodes.add(filter);
-                        setTimeout(() => {
-                            activeNodes.delete(src);
-                            activeNodes.delete(gain);
-                            activeNodes.delete(filter);
-                        }, (dur + 0.05) * 1000);
-                        break;
-                    }
+    const osc1 = ctx.createOscillator(); osc1.type='square'; osc1.frequency.value=800;
+    const osc2 = ctx.createOscillator(); osc2.type='square'; osc2.frequency.value=540;
+    osc1.connect(bp); osc2.connect(bp);
+    osc1.start(now); osc1.stop(now+0.32);
+    osc2.start(now); osc2.stop(now+0.32);
 
-                    case 'synth': {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'square';
-                        osc.frequency.setValueAtTime(220, now);
-                        osc.frequency.linearRampToValueAtTime(440, now + 0.3);
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(0.12, now + 0.05);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-                        osc.connect(gain);
-                        gain.connect(master);
-                        osc.start(now);
-                        osc.stop(now + 0.5);
-                        activeNodes.add(osc);
-                        activeNodes.add(gain);
-                        setTimeout(() => {
-                            activeNodes.delete(osc);
-                            activeNodes.delete(gain);
-                        }, 600);
-                        // sub oscillator
-                        const osc2 = ctx.createOscillator();
-                        const g2 = ctx.createGain();
-                        osc2.type = 'sine';
-                        osc2.frequency.setValueAtTime(110, now);
-                        osc2.frequency.linearRampToValueAtTime(220, now + 0.3);
-                        g2.gain.setValueAtTime(0, now);
-                        g2.gain.linearRampToValueAtTime(0.08, now + 0.05);
-                        g2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-                        osc2.connect(g2);
-                        g2.connect(master);
-                        osc2.start(now);
-                        osc2.stop(now + 0.4);
-                        activeNodes.add(osc2);
-                        activeNodes.add(g2);
-                        setTimeout(() => {
-                            activeNodes.delete(osc2);
-                            activeNodes.delete(g2);
-                        }, 500);
-                        break;
-                    }
+    const voice = makeVoice([osc1,osc2],[g], now+0.32);
+    scheduleCleanup(voice, osc1);
+    return voice;
+  }
 
-                    case 'kick': {
-                        // low thump
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(120, now);
-                        osc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(0.45, now + 0.01);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-                        osc.connect(gain);
-                        gain.connect(master);
-                        osc.start(now);
-                        osc.stop(now + 0.12);
-                        activeNodes.add(osc);
-                        activeNodes.add(gain);
-                        setTimeout(() => {
-                            activeNodes.delete(osc);
-                            activeNodes.delete(gain);
-                        }, 200);
-                        // noise click
-                        noiseBurstBuffer(0.04, 0.08, 3000);
-                        break;
-                    }
+  function playCrash(){
+    const now = ctx.currentTime;
+    const noise = ctx.createBufferSource();
+    noise.buffer = getNoiseBuffer();
+    const hp = ctx.createBiquadFilter();
+    hp.type='highpass'; hp.frequency.value=5500;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.7, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now+1.1);
+    noise.connect(hp); hp.connect(g); g.connect(master);
+    noise.start(now); noise.stop(now+1.12);
+    const voice = makeVoice([noise],[g], now+1.1);
+    scheduleCleanup(voice, noise);
+    return voice;
+  }
 
-                    case 'snare': {
-                        // noise burst
-                        noiseBurstBuffer(0.1, 0.25, 2000);
-                        // low tone
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(180, now);
-                        osc.frequency.exponentialRampToValueAtTime(80, now + 0.06);
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(0.25, now + 0.01);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-                        osc.connect(gain);
-                        gain.connect(master);
-                        osc.start(now);
-                        osc.stop(now + 0.08);
-                        activeNodes.add(osc);
-                        activeNodes.add(gain);
-                        setTimeout(() => {
-                            activeNodes.delete(osc);
-                            activeNodes.delete(gain);
-                        }, 150);
-                        break;
-                    }
+  function playLaser(){
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type='sawtooth';
+    osc.frequency.setValueAtTime(1800, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now+0.22);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.5, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now+0.24);
+    osc.connect(g); g.connect(master);
+    osc.start(now); osc.stop(now+0.25);
+    const voice = makeVoice([osc],[g], now+0.25);
+    scheduleCleanup(voice, osc);
+    return voice;
+  }
 
-                    default:
-                        break;
-                }
-            }
+  function playBlip(){
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type='square';
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.exponentialRampToValueAtTime(980, now+0.09);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.4, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now+0.1);
+    osc.connect(g); g.connect(master);
+    osc.start(now); osc.stop(now+0.11);
+    const voice = makeVoice([osc],[g], now+0.11);
+    scheduleCleanup(voice, osc);
+    return voice;
+  }
 
-            // ---------- build UI ----------
-            const grid = document.getElementById('soundGrid');
+  function playBoing(){
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(500, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now+0.4);
+    const vibrato = ctx.createOscillator();
+    vibrato.frequency.value = 26;
+    const vGain = ctx.createGain();
+    vGain.gain.value = 60;
+    vibrato.connect(vGain); vGain.connect(osc.frequency);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.5, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now+0.42);
+    osc.connect(g); g.connect(master);
+    osc.start(now); osc.stop(now+0.44);
+    vibrato.start(now); vibrato.stop(now+0.44);
+    const voice = makeVoice([osc,vibrato],[g], now+0.42);
+    scheduleCleanup(voice, osc);
+    return voice;
+  }
 
-            sounds.forEach((sound, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'sound-btn';
-                btn.dataset.id = sound.id;
-                btn.setAttribute('aria-label', `Play ${sound.label} sound`);
-                btn.innerHTML = `
-                        <span class="emoji">${sound.emoji}</span>
-                        <span class="label">${sound.label}</span>
-                        <span class="key-hint">${sound.key}</span>
-                        <span class="badge">#${index + 1}</span>
-                    `;
+  // ---------- pad definitions ----------
+  const PADS = [
+    { key:'1', name:'Kick',    tag:'Low',  play: playKick,             loopInterval:380 },
+    { key:'2', name:'Snare',   tag:'Mid',  play: playSnare,            loopInterval:280 },
+    { key:'3', name:'Clap',    tag:'Mid',  play: playClap,             loopInterval:300 },
+    { key:'4', name:'Cl. Hat', tag:'High', play: () => playHat(false), loopInterval:160 },
+    { key:'5', name:'Op. Hat', tag:'High', play: () => playHat(true),  loopInterval:560 },
+    { key:'6', name:'Tom',     tag:'Low',  play: playTom,              loopInterval:520 },
+    { key:'7', name:'Rimshot', tag:'High', play: playRimshot,          loopInterval:170 },
+    { key:'8', name:'Cowbell', tag:'Mid',  play: playCowbell,          loopInterval:400 },
+    { key:'9', name:'Crash',   tag:'High', play: playCrash,            loopInterval:1200 },
+    { key:'Q', name:'Laser',   tag:'FX',   play: playLaser,            loopInterval:340 },
+    { key:'W', name:'Blip',    tag:'FX',   play: playBlip,             loopInterval:180 },
+    { key:'E', name:'Boing',   tag:'FX',   play: playBoing,            loopInterval:520 },
+  ];
 
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const ctx = getAudioContext();
-                    if (ctx.state === 'suspended') ctx.resume();
+  const padsEl = document.getElementById('pads');
+  const keyMap = {};
+  // key -> { def, btn, intervalId, voice }  (present only while looping)
+  const loopingPads = new Map();
 
-                    // visual feedback
-                    this.classList.add('active');
-                    setTimeout(() => this.classList.remove('active'), 200);
+  PADS.forEach(def => {
+    const btn = document.createElement('button');
+    btn.className = 'pad';
+    btn.innerHTML = `
+      <span class="key">${def.key}</span>
+      <span class="name">${def.name}</span>
+      <span class="tag">${def.tag}</span>
+    `;
+    btn.addEventListener('pointerdown', (e) => { e.preventDefault(); togglePad(def, btn); });
+    padsEl.appendChild(btn);
+    keyMap[def.key.toLowerCase()] = { def, btn };
+  });
 
-                    playSound(sound.id);
-                });
+  function flash(btn){
+    btn.classList.add('hit');
+    setTimeout(()=>btn.classList.remove('hit'), 130);
+  }
 
-                grid.appendChild(btn);
-            });
+  function fireOnce(def, btn){
+    const voice = def.play();
+    registerVoice(voice);
+    flash(btn);
+    const state = loopingPads.get(def.key);
+    if(state) state.voice = voice;
+    return voice;
+  }
 
-            // ---------- keyboard shortcuts ----------
-            document.addEventListener('keydown', function(e) {
-                // ignore if typing in an input
-                if (e.target.tagName === 'INPUT') return;
+  function startLoop(def, btn){
+    if(ctx.state === 'suspended') ctx.resume();
+    btn.classList.add('active');
+    loopingPads.set(def.key, { def, btn, intervalId:null, voice:null });
+    fireOnce(def, btn);
+    const intervalId = setInterval(() => fireOnce(def, btn), def.loopInterval);
+    loopingPads.get(def.key).intervalId = intervalId;
+  }
 
-                const key = e.key;
-                const sound = sounds.find(s => s.key === key);
-                if (sound) {
-                    e.preventDefault();
-                    const btn = grid.querySelector(`[data-id="${sound.id}"]`);
-                    if (btn) {
-                        btn.click();
-                    }
-                }
+  function stopLoop(key){
+    const state = loopingPads.get(key);
+    if(!state) return;
+    clearInterval(state.intervalId);
+    state.btn.classList.remove('active');
+    if(state.voice){
+      state.voice.kill();
+      unregisterVoice(state.voice);
+    }
+    loopingPads.delete(key);
+  }
 
-                // stop all with Escape
-                if (key === 'Escape') {
-                    stopAllSounds();
-                }
-            });
+  function togglePad(def, btn){
+    if(loopingPads.has(def.key)){
+      stopLoop(def.key);
+    } else {
+      startLoop(def, btn);
+    }
+  }
 
-            // ---------- stop all button ----------
-            document.getElementById('stopAllBtn').addEventListener('click', function() {
-                stopAllSounds();
-                // visual feedback
-                this.style.transform = 'scale(0.92)';
-                setTimeout(() => this.style.transform = '', 150);
-            });
+  window.addEventListener('keydown', (e) => {
+    if(e.repeat) return;
+    const entry = keyMap[e.key.toLowerCase()];
+    if(entry){ togglePad(entry.def, entry.btn); }
+  });
 
-            // ---------- init volume ----------
-            // set initial volume from slider
-            const initVal = parseInt(volumeSlider.value, 10);
-            volumeDisplay.textContent = initVal + '%';
-            // master gain will be created on first sound play
+  // ---------- stop all ----------
+  const stopBtn = document.getElementById('stopAll');
+  stopBtn.addEventListener('click', () => {
+    Array.from(loopingPads.keys()).forEach(stopLoop);
+    activeVoices.forEach(v => v.kill());
+    activeVoices.clear();
+    updateVoiceCount();
+    stopBtn.classList.add('pressed');
+    setTimeout(()=>stopBtn.classList.remove('pressed'), 130);
+  });
 
-            // ---------- pre-warm audio context on any user gesture ----------
-            const warmUp = () => {
-                const ctx = getAudioContext();
-                if (ctx.state === 'suspended') ctx.resume();
-                // also create master gain so volume is ready
-                getMastserGain();
-                document.removeEventListener('click', warmUp);
-                document.removeEventListener('touchstart', warmUp);
-                document.removeEventListener('keydown', warmUp);
-            };
-            document.addEventListener('click', warmUp);
-            document.addEventListener('touchstart', warmUp);
-            document.addEventListener('keydown', warmUp);
-
-            // also warm on volume slider interaction
-            volumeSlider.addEventListener('pointerdown', warmUp);
-
-            console.log('🎵 Soundboard ready! Click a sound or use keys 1-0, -, =');
-            console.log('🔊 Volume slider & Stop All (Esc) work too.');
-
-        })();
-    </script>
+})();
+</script>
 
 </body>
 </html>
